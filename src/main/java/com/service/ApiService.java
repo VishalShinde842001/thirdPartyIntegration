@@ -88,9 +88,32 @@ public class ApiService {
 	public Response randomUserGenerator() {
 		Response response = new Response();
 		try {
+			// Fetch URL from environment
+			String apiUrl = environment.getProperty("user.generate.api");
 
+			// Validate the URL
+			if (apiUrl != null && apiUrl.startsWith("http")) {
+				System.out.println("Resolved API URL: " + apiUrl);
+
+				// Call the API
+				String apiResponse = restTemplate.getForObject(apiUrl, String.class);
+				JSONObject jsonResponse = new JSONObject(apiResponse);
+				System.out.println("JsonResponse=========>" + jsonResponse);
+				// Set success response
+				response.setStatus(ErrorConstants.SUCESS);
+				response.setMessage("Response fetched successfully.");
+				if (jsonResponse.has("results") && jsonResponse.getJSONArray("results") != null) {
+					response.setResult(jsonResponse.getJSONArray("results").toString());
+				}
+			} else {
+				// Handle missing or invalid URL
+				response.setStatus(ErrorConstants.REQUIRED_FIELD_MISSING);
+				response.setMessage(ErrorConstants.API_URL_NOT_FOUND);
+			}
 		} catch (Exception e) {
-
+			// Log and rethrow exception
+			e.printStackTrace();
+			throw e;
 		}
 		return response;
 	}
